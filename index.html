@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vault Messenger v6.2 | Final</title>
+    <title>Vault Messenger v6.1 | Privacy Protocol</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #020617; color: #f1f5f9; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        body { background: #020617; color: #f1f5f9; font-family: 'Outfit', sans-serif; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         .hidden { display: none !important; }
         #matrixCanvas { display: none; }
+        .stat-glow { text-shadow: 0 0 10px #22d3ee; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -20,68 +21,77 @@
     <div id="payModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-6">
         <div class="glass w-full max-w-sm p-8 rounded-[3rem] text-center shadow-2xl border-cyan-500/20">
             <div id="methodSelect">
-                <h2 class="text-xl font-black mb-6 text-cyan-400 uppercase tracking-widest italic">Image Locked</h2>
+                <h2 class="text-xl font-black mb-6 text-cyan-400 uppercase italic">SHADOW LOCKED</h2>
                 <div class="space-y-3">
-                    <button onclick="showDetails('bKash', '01774460656')" class="w-full bg-[#D12053] py-4 rounded-2xl font-bold italic text-white active:scale-95 transition-transform">bKash</button>
-                    <button onclick="showDetails('Nagad', '01774460656')" class="w-full bg-[#F7941D] py-4 rounded-2xl font-bold italic text-white active:scale-95 transition-transform">Nagad</button>
+                    <button onclick="showDetails('bKash', '01774460656')" class="w-full bg-[#D12053] py-4 rounded-2xl font-bold italic text-white">bKash</button>
+                    <button onclick="showDetails('Nagad', '01774460656')" class="w-full bg-[#F7941D] py-4 rounded-2xl font-bold italic text-white">Nagad</button>
                 </div>
             </div>
             <div id="payDetails" class="hidden">
-                <p class="text-[10px] text-slate-400 mb-2 uppercase font-black tracking-widest">Send 5.00 BDT to:</p>
+                <p class="text-[10px] text-slate-400 mb-2 uppercase font-black">Send 5.00 BDT to:</p>
                 <div id="personalNum" class="text-2xl font-mono text-cyan-400 mb-6 bg-white/5 p-4 rounded-xl border border-white/5"></div>
-                <input type="text" id="trxId" placeholder="Transaction ID" class="w-full bg-black/50 border border-slate-700 p-4 rounded-xl text-center mb-4 uppercase font-bold outline-none focus:border-cyan-500">
-                <button onclick="submitTrx()" class="w-full bg-cyan-500 text-black py-4 rounded-2xl font-black uppercase">Submit for Review</button>
+                <input type="text" id="trxId" placeholder="TRX ID" class="w-full bg-black/50 border border-slate-700 p-4 rounded-xl text-center mb-4 uppercase font-bold outline-none">
+                <button onclick="submitTrx()" class="w-full bg-cyan-500 text-black py-4 rounded-2xl font-black uppercase">Verify Access</button>
                 <div id="waitMsg" class="hidden mt-4">
-                    <p class="text-[10px] text-yellow-500 animate-pulse font-bold uppercase tracking-widest">Verifying... Wait 1 min</p>
+                    <p class="text-[10px] text-yellow-500 animate-pulse font-bold uppercase">Verifying Shadow Protocol...</p>
                 </div>
             </div>
-            <button onclick="closePay()" class="mt-8 text-[10px] text-slate-600 font-bold uppercase tracking-widest">Cancel</button>
+            <button onclick="closePay()" class="mt-8 text-[10px] text-slate-600 font-bold uppercase">Abort</button>
         </div>
     </div>
 
     <div id="adminPanel" class="hidden fixed inset-0 z-[60] bg-[#020617] p-6 overflow-y-auto">
         <div class="max-w-xl mx-auto">
-            <div class="flex justify-between items-center mb-10">
-                <h1 class="text-2xl font-black text-cyan-400 uppercase italic">Admin Terminal</h1>
-                <button onclick="closeAdmin()" class="bg-red-500/20 text-red-500 px-6 py-2 rounded-full text-xs font-bold uppercase">Exit</button>
+            <div class="flex justify-between items-center mb-10 border-b border-white/10 pb-4">
+                <h1 class="text-2xl font-black text-cyan-400 italic">SYSTEM ADMIN</h1>
+                <button onclick="closeAdmin()" class="text-red-500 font-bold uppercase text-xs">Exit</button>
             </div>
-            <div id="requestList" class="space-y-4">
-                <p class="text-slate-500 text-center text-[10px] uppercase">Listening for packets...</p>
-            </div>
+            <div id="requestList" class="space-y-4"></div>
         </div>
     </div>
 
-    <div id="appUI" class="w-full max-w-lg glass rounded-[3rem] p-8 md:p-12 relative shadow-2xl">
+    <div class="w-full max-w-lg glass rounded-[3rem] p-8 md:p-12 shadow-2xl relative border-white/5">
         <div class="text-center mb-10">
-            <h1 class="text-4xl font-black tracking-tighter text-white uppercase italic">VAULT v6.2</h1>
-            <p class="text-[8px] tracking-[0.7em] text-cyan-500 font-bold uppercase">Village Brothers Protocol</p>
+            <h1 class="text-4xl font-black tracking-tighter text-white italic">VAULT MESSENGER</h1>
+            <p class="text-[8px] tracking-[0.7em] text-cyan-500 font-bold uppercase">v6.1 Privacy Protocol</p>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 mb-8">
-            <label class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 text-center cursor-pointer hover:border-cyan-500/50">
-                <span class="text-[8px] block text-slate-500 font-black mb-1 uppercase tracking-widest">Shadow</span>
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 text-center">
+                <span class="text-[8px] block text-slate-500 font-black mb-1 uppercase">Shift</span>
+                <input type="number" id="shift" value="12" class="bg-transparent w-full text-center font-black text-cyan-400 outline-none">
+            </div>
+            <label class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 text-center cursor-pointer">
+                <span class="text-[8px] block text-slate-500 font-black mb-1 uppercase">Shadow</span>
                 <span id="shadowStat" class="font-black text-white uppercase text-xs">Load Image</span>
                 <input type="file" id="imgInput" class="hidden" onchange="handleShadow(this)">
             </label>
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 text-center">
-                <span class="text-[8px] block text-slate-500 font-black mb-1 uppercase tracking-widest">Shift Key</span>
-                <input type="number" id="shift" value="12" class="bg-transparent w-full text-center font-black text-cyan-400 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-black/20 p-3 rounded-xl border border-white/5 flex justify-between items-center">
+                <span class="text-[9px] font-black text-slate-500 uppercase">Ghost</span>
+                <span class="text-[9px] font-black text-red-500 uppercase">OFF</span>
+            </div>
+            <div class="bg-black/20 p-3 rounded-xl border border-white/5 flex justify-between items-center">
+                <span class="text-[9px] font-black text-slate-500 uppercase">AI Agent</span>
+                <span class="text-[9px] font-black text-cyan-500 uppercase">DECOY</span>
             </div>
         </div>
 
-        <textarea id="msgInput" placeholder="Enter message..." class="w-full bg-black/40 border border-slate-800 rounded-[2.5rem] p-6 h-36 mb-6 outline-none focus:border-cyan-500/50 text-lg resize-none"></textarea>
+        <textarea id="msgInput" placeholder="Enter secure message..." class="w-full bg-black/40 border border-slate-800 rounded-[2.5rem] p-6 h-36 mb-6 outline-none focus:border-cyan-500/50 text-lg"></textarea>
 
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="run('enc')" class="bg-cyan-500 text-black py-5 rounded-2xl font-black uppercase active:scale-95 transition-transform shadow-lg shadow-cyan-500/10">Encrypt</button>
+            <button onclick="run('enc')" class="bg-cyan-500 text-black py-5 rounded-2xl font-black uppercase active:scale-95 transition-transform">Encrypt</button>
             <button onclick="run('dec')" class="bg-slate-800 text-white py-5 rounded-2xl font-black uppercase active:scale-95 transition-transform">Decrypt</button>
         </div>
 
         <div id="resArea" class="hidden mt-8 p-6 bg-cyan-500/5 rounded-[2.5rem] border border-cyan-500/10">
             <div class="flex justify-between items-center mb-4">
-                <span class="text-[9px] font-black text-cyan-400 uppercase tracking-widest italic">Result Matrix</span>
-                <button id="copyBtn" class="text-[9px] bg-white text-black px-4 py-1 rounded-full font-black">COPY</button>
+                <span id="resLabel" class="text-[9px] font-black text-cyan-400 uppercase italic">Output Matrix</span>
+                <button id="copyBtn" class="text-[9px] bg-white text-black px-4 py-1 rounded-full font-black">SAVE</button>
             </div>
-            <p id="resText" class="text-center break-words mb-4 text-white text-lg"></p>
+            <p id="resText" class="text-center break-words mb-4 text-white text-lg font-medium"></p>
             <div id="imgBox" class="hidden rounded-2xl overflow-hidden border border-cyan-500/20">
                 <img id="resImg" class="w-full">
             </div>
@@ -111,8 +121,8 @@
             const reader = new FileReader();
             reader.onload = (e) => { 
                 shadowData = e.target.result; 
-                document.getElementById('shadowStat').innerText = "Ready"; 
-                document.getElementById('shadowStat').style.color = "#22d3ee";
+                document.getElementById('shadowStat').innerText = "READY"; 
+                document.getElementById('shadowStat').classList.add('stat-glow');
                 settings.paid = false; 
             };
             reader.readAsDataURL(input.files[0]);
@@ -126,7 +136,7 @@
 
         function submitTrx() {
             const trx = document.getElementById('trxId').value.trim();
-            if(trx.length < 8) return alert("সঠিক Transaction ID দিন!");
+            if(trx.length < 8) return alert("Invalid TRX ID");
             const newRef = db.ref('payments').push();
             settings.currentTrxKey = newRef.key;
             newRef.set({ trx: trx, status: 'pending', timestamp: Date.now() });
@@ -146,12 +156,9 @@
                 s.forEach((c) => {
                     const d = c.val();
                     if(d.status === 'pending') {
-                        list.innerHTML += `<div class="glass p-5 rounded-3xl flex justify-between items-center border-cyan-500/10">
-                            <div><p class="font-black text-cyan-400 uppercase text-lg italic">${d.trx}</p><p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">${new Date(d.timestamp).toLocaleTimeString()}</p></div>
-                            <div class="flex gap-2">
-                                <button onclick="navigator.clipboard.writeText('${d.trx}')" class="bg-slate-700 p-2 rounded-lg text-[8px] font-black uppercase px-4">Copy</button>
-                                <button onclick="approvePay('${c.key}')" class="bg-cyan-400 text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase">Approve</button>
-                            </div>
+                        list.innerHTML += `<div class="glass p-5 rounded-3xl flex justify-between items-center">
+                            <div><p class="font-black text-cyan-400 uppercase">${d.trx}</p><p class="text-[8px] text-slate-500">${new Date(d.timestamp).toLocaleTimeString()}</p></div>
+                            <button onclick="approvePay('${c.key}')" class="bg-cyan-400 text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase">Approve</button>
                         </div>`;
                     }
                 });
@@ -160,12 +167,7 @@
 
         function approvePay(key) { db.ref('payments/' + key).update({ status: 'approved' }); }
         function closeAdmin() { document.getElementById('adminPanel').classList.add('hidden'); }
-        function closePay() { 
-            document.getElementById('payModal').classList.add('hidden'); 
-            document.getElementById('methodSelect').classList.remove('hidden');
-            document.getElementById('payDetails').classList.add('hidden');
-            document.getElementById('waitMsg').classList.add('hidden');
-        }
+        function closePay() { document.getElementById('payModal').classList.add('hidden'); }
 
         async function run(mode) {
             const input = document.getElementById('msgInput');
@@ -174,6 +176,7 @@
             const resText = document.getElementById('resText');
             const resImg = document.getElementById('resImg');
             const imgBox = document.getElementById('imgBox');
+            const resLabel = document.getElementById('resLabel');
             let shift = parseInt(document.getElementById('shift').value) || 0;
 
             if (mode === 'dec' && shadowData && !settings.paid) {
@@ -201,18 +204,19 @@
                 ctx.putImageData(data, 0, 0);
                 const finalUrl = cvs.toDataURL("image/png");
                 resImg.src = finalUrl;
-                resText.innerText = mode === 'enc' ? "Encryption Processed" : "Decryption Processed";
+                resText.innerText = mode === 'enc' ? "Shadow Matrix Created" : "Shadow Matrix Restored";
+                resLabel.innerText = "Shadow Result";
                 imgBox.classList.remove('hidden');
-                resImg.classList.remove('hidden');
                 document.getElementById('copyBtn').onclick = () => {
-                    const l = document.createElement('a'); l.href = finalUrl; l.download = "vault_result.png"; l.click();
+                    const l = document.createElement('a'); l.href = finalUrl; l.download = "vault_v6.png"; l.click();
                 };
             } else if (input.value) {
                 if(mode === 'dec') shift = -shift;
                 const out = input.value.split('').map(c => String.fromCharCode(c.charCodeAt(0) + (c === ' ' ? 0 : shift))).join('');
                 resText.innerText = out;
+                resLabel.innerText = "Output Matrix";
                 imgBox.classList.add('hidden');
-                document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(out); alert("Copied!"); };
+                document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(out); alert("SAVED TO CLIPBOARD"); };
             }
             resArea.classList.remove('hidden');
         }
