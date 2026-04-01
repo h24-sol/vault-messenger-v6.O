@@ -1,252 +1,68 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Vault Messenger v6.0 | Web4</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root { --accent: #22d3ee; --bg: #020617; }
-        body {
-            background: radial-gradient(circle at top right, #083344, #020617, #000000);
-            font-family: 'Outfit', sans-serif;
-            color: #f1f5f9;
-            overflow-x: hidden;
-        }
-        .app-name {
-            background: linear-gradient(to bottom, #ffffff 30%, #22d3ee 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.3));
-        }
-        .glass {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .neo-input {
-            background: rgba(2, 6, 23, 0.8);
-            border: 1px solid #1e293b;
-        }
-        #matrixCanvas { display: none; }
-        .payment-btn { transition: transform 0.2s; }
-        .payment-btn:active { transform: scale(0.9); }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<div id="payModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-2xl p-6">
+    <div class="glass w-full max-w-sm p-8 rounded-[3rem] border-cyan-500/20 text-center">
+        <div id="methodSelect">
+            <h2 class="text-xl font-black mb-6 uppercase tracking-tighter text-cyan-400">Select Payment</h2>
+            <div class="space-y-4">
+                <button onclick="showDetails('bKash', '01774460656')" class="w-full bg-[#D12053] py-4 rounded-2xl font-black italic">bKash</button>
+                <button onclick="showDetails('Nagad', '01774460656')" class="w-full bg-[#F7941D] py-4 rounded-2xl font-black italic">Nagad</button>
+            </div>
+        </div>
 
-    <div id="payModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
-        <div class="glass w-full max-w-xs p-8 rounded-[3rem] text-center border-cyan-500/20">
-            <div class="mb-4 text-cyan-400 font-black text-xs uppercase tracking-[0.3em]">Secure Gateway</div>
-            <h2 class="text-2xl font-black mb-2">৫.০০ টাকা</h2>
-            <p class="text-[10px] text-slate-400 mb-8 uppercase font-bold tracking-widest">Image Decryption Fee</p>
+        <div id="payDetails" class="hidden">
+            <h2 id="providerName" class="text-2xl font-black mb-2 italic"></h2>
+            <p class="text-sm text-slate-400 mb-4">Send <span class="text-white font-bold">5.00 BDT</span> to:</p>
+            <div class="bg-white/10 p-4 rounded-2xl mb-6 select-all font-mono text-xl tracking-widest border border-white/5">
+                <span id="personalNum"></span>
+            </div>
+            <input type="text" id="trxId" placeholder="Enter Transaction ID" class="w-full bg-black/50 border border-slate-700 p-4 rounded-xl text-center mb-4 outline-none focus:border-cyan-500">
+            <button onclick="verifyPayment()" class="w-full bg-cyan-500 text-black py-4 rounded-2xl font-black uppercase">Verify & Unlock</button>
+        </div>
+        
+        <button onclick="closePay()" class="mt-6 text-[9px] text-slate-600 uppercase font-black">Cancel</button>
+    </div>
+</div>
+
+<script>
+    let activeProvider = "";
+    
+    function showDetails(provider, number) {
+        activeProvider = provider;
+        document.getElementById('methodSelect').classList.add('hidden');
+        document.getElementById('payDetails').classList.remove('hidden');
+        document.getElementById('providerName').innerText = provider;
+        document.getElementById('personalNum').innerText = number;
+        // Set brand colors
+        document.getElementById('providerName').style.color = (provider === 'bKash') ? '#D12053' : '#F7941D';
+    }
+
+    function verifyPayment() {
+        const trx = document.getElementById('trxId').value;
+        if(trx.length < 8) {
+            alert("সঠিক Transaction ID দিন!");
+            return;
+        }
+
+        // Simulating verification - In a real app, you'd check this via a backend
+        alert(`${activeProvider} পেমেন্ট ভেরিফাই করা হচ্ছে...`);
+        
+        setTimeout(() => {
+            alert("পেমেন্ট সফল! ৫.০০ টাকা গ্রহণ করা হয়েছে।");
+            settings.paid = true;
+            document.getElementById('payModal').classList.add('hidden');
+            run('dec'); // Trigger decryption
             
-            <div class="space-y-3">
-                <button onclick="mockPayment('bKash')" class="w-full bg-[#D12053] py-4 rounded-2xl flex items-center justify-center gap-3">
-                    <span class="font-black text-white italic">bKash</span>
-                </button>
-                <button onclick="mockPayment('Nagad')" class="w-full bg-[#F7941D] py-4 rounded-2xl flex items-center justify-center gap-3">
-                    <span class="font-black text-white italic">Nagad</span>
-                </button>
-            </div>
-            <button onclick="closePay()" class="mt-6 text-[9px] text-slate-600 uppercase font-black tracking-widest">Cancel</button>
-        </div>
-    </div>
+            // Reset for next time
+            document.getElementById('methodSelect').classList.remove('hidden');
+            document.getElementById('payDetails').classList.add('hidden');
+            document.getElementById('trxId').value = "";
+        }, 2000);
+    }
 
-    <div id="mainApp" class="w-full max-w-lg glass rounded-[3rem] p-8 md:p-12 relative overflow-hidden">
-        <div class="flex flex-col items-center mb-10">
-            <div class="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-600 p-[1px] rounded-3xl mb-6 shadow-2xl">
-                <div class="w-full h-full bg-[#020617] rounded-[23px] flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-            </div>
-            <h1 class="app-name text-4xl font-black mb-1 text-center uppercase">VAULT v6.0</h1>
-            <p class="text-[9px] tracking-[0.5em] text-slate-500 font-bold uppercase text-center">Web4 AI-Protocol • 2026</p>
-        </div>
+    function closePay() {
+        document.getElementById('payModal').classList.add('hidden');
+        document.getElementById('methodSelect').classList.remove('hidden');
+        document.getElementById('payDetails').classList.add('hidden');
+    }
 
-        <div class="grid grid-cols-4 gap-2 mb-8">
-            <div class="bg-slate-950/50 p-2 rounded-2xl border border-slate-800 text-center">
-                <label class="text-[7px] font-black text-cyan-500 uppercase block mb-1">Shift</label>
-                <input type="number" id="shift" value="12" class="bg-transparent w-full text-center font-bold text-sm outline-none">
-            </div>
-            <label class="bg-slate-950/50 p-2 rounded-2xl border border-slate-800 text-center cursor-pointer">
-                <label class="text-[7px] font-bold text-slate-500 uppercase block mb-1">Shadow</label>
-                <span id="shadowStat" class="text-[9px] font-black text-cyan-400 uppercase">LOAD</span>
-                <input type="file" id="imgInput" accept="image/*" class="hidden" onchange="handleShadow(this)">
-            </label>
-            <button onclick="toggleSet('ghost')" id="ghostBtn" class="bg-slate-950/50 p-2 rounded-2xl border border-slate-800">
-                <label class="text-[7px] font-bold text-slate-500 uppercase block mb-1">Ghost</label>
-                <span id="ghostStat" class="text-[9px] font-black text-slate-400 uppercase">OFF</span>
-            </button>
-            <button onclick="connectWallet()" id="walletBtn" class="bg-slate-950/50 p-2 rounded-2xl border border-slate-800">
-                <label class="text-[7px] font-bold text-orange-500 uppercase block mb-1">Solana</label>
-                <span id="walletStat" class="text-[9px] font-black text-slate-400 uppercase">LINK</span>
-            </button>
-        </div>
-
-        <div class="flex justify-between items-center mb-4 px-2">
-            <span class="text-[9px] font-black text-purple-400 uppercase tracking-widest">AI AGENT: IDLE</span>
-            <button onclick="aiObfuscate()" class="text-[9px] bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full font-black text-purple-400 uppercase hover:bg-purple-500 hover:text-white transition-all">Obfuscate</button>
-        </div>
-
-        <textarea id="msgInput" placeholder="আপনার গোপন বার্তাটি লিখুন..." class="w-full neo-input rounded-[2rem] p-6 h-36 text-slate-200 outline-none text-lg resize-none mb-6"></textarea>
-
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <button onclick="run('enc')" class="bg-cyan-500 text-slate-950 font-black py-5 rounded-2xl active:scale-95 uppercase shadow-lg shadow-cyan-500/20">Encrypt</button>
-            <button onclick="run('dec')" class="bg-slate-800 text-white font-black py-5 rounded-2xl active:scale-95 uppercase">Decrypt</button>
-        </div>
-
-        <div id="resArea" class="hidden">
-            <div class="bg-white/5 border border-white/10 rounded-[2rem] p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <span id="resLabel" class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Output</span>
-                    <button id="actionBtn" class="text-[10px] bg-cyan-400 text-black px-4 py-1.5 rounded-full font-black uppercase">Copy</button>
-                </div>
-                <p id="resText" class="text-lg font-medium text-white break-words mb-4 text-center"></p>
-                <div id="imgBox" class="hidden rounded-2xl overflow-hidden border border-white/10">
-                    <img id="resImg" src="" class="w-full">
-                </div>
-            </div>
-        </div>
-
-        <footer class="mt-8 pt-6 border-t border-slate-900 text-center">
-            <p class="text-[8px] text-slate-700 font-black uppercase tracking-[0.5em]">Dhaka • 2026 • Village Brothers Dev</p>
-        </footer>
-    </div>
-
-    <canvas id="matrixCanvas"></canvas>
-
-    <script>
-        let settings = { ghost: false, wallet: null, paid: false };
-        let shadowData = null;
-
-        function toggleSet(type) {
-            settings[type] = !settings[type];
-            document.getElementById(type + 'Stat').innerText = settings[type] ? "ACTIVE" : "OFF";
-            document.getElementById(type + 'Stat').style.color = settings[type] ? "#22d3ee" : "#94a3b8";
-        }
-
-        async function connectWallet() {
-            if (window.solana) {
-                const resp = await window.solana.connect();
-                settings.wallet = resp.publicKey.toString();
-                document.getElementById('walletStat').innerText = "CONNECTED";
-                document.getElementById('walletStat').style.color = "#f97316";
-            } else {
-                alert("Phantom/Solflare Wallet Not Found!");
-            }
-        }
-
-        function handleShadow(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    shadowData = e.target.result;
-                    document.getElementById('shadowStat').innerText = "READY";
-                    document.getElementById('shadowStat').style.color = "#ffffff";
-                    settings.paid = false; // Reset payment status for new image
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function aiObfuscate() {
-            const input = document.getElementById('msgInput');
-            if(!input.value) return;
-            const decoys = [
-                "বাজার থেকে ৫ কেজি আলু আর ২ কেজি পেঁয়াজ নিয়ে এসো।",
-                "কাল সকালে মিটিং আছে, দেরি করো না কিন্তু।",
-                "আজকের আবহাওয়া খুব ভালো, চলো বাইরে ঘুরে আসি।",
-                "ভাই, ১০ টা বাজে ফোন দিও, কিছু জরুরি কথা আছে।"
-            ];
-            input.value = decoys[Math.floor(Math.random() * decoys.length)];
-            alert("AI Agent: Message Obfuscated to Decoy Layer.");
-        }
-
-        function mockPayment(provider) {
-            const btn = event.currentTarget;
-            btn.innerHTML = "Processing...";
-            setTimeout(() => {
-                settings.paid = true;
-                document.getElementById('payModal').classList.add('hidden');
-                alert(provider + " পেমেন্ট সফল হয়েছে! ৫.০০ টাকা গ্রহণ করা হয়েছে।");
-                run('dec');
-            }, 2000);
-        }
-
-        function closePay() { document.getElementById('payModal').classList.add('hidden'); }
-
-        async function run(mode) {
-            const input = document.getElementById('msgInput');
-            const resArea = document.getElementById('resArea');
-            const resText = document.getElementById('resText');
-            const resImg = document.getElementById('resImg');
-            const imgBox = document.getElementById('imgBox');
-            const actionBtn = document.getElementById('actionBtn');
-            let shift = parseInt(document.getElementById('shift').value) || 0;
-
-            // PAYMENT GATEWAY TRIGGER
-            if (mode === 'dec' && shadowData && !settings.paid) {
-                document.getElementById('payModal').classList.remove('hidden');
-                return;
-            }
-
-            if (shadowData) {
-                const img = new Image();
-                img.src = shadowData;
-                await new Promise(r => img.onload = r);
-                
-                const cvs = document.getElementById('matrixCanvas');
-                const ctx = cvs.getContext('2d');
-                cvs.width = img.width; cvs.height = img.height;
-                ctx.drawImage(img, 0, 0);
-
-                const data = ctx.getImageData(0, 0, cvs.width, cvs.height);
-                const px = data.data;
-
-                let seed = shift;
-                for (let i = 0; i < px.length; i += 4) {
-                    px[i] = px[i] ^ (seed % 255);
-                    px[i+1] = px[i+1] ^ ((seed * 2) % 255);
-                    px[i+2] = px[i+2] ^ ((seed * 3) % 255);
-                    seed = (seed * 16807) % 2147483647;
-                }
-                ctx.putImageData(data, 0, 0);
-
-                const finalUrl = cvs.toDataURL("image/png");
-                resText.innerText = mode === 'enc' ? "Shadow Matrix Created" : "Shadow Matrix Restored";
-                resImg.src = finalUrl;
-                imgBox.classList.remove('hidden');
-                
-                actionBtn.innerText = "Save";
-                actionBtn.onclick = () => {
-                    const link = document.createElement('a');
-                    link.href = finalUrl;
-                    link.download = mode === 'enc' ? 'shadow.png' : 'restored.png';
-                    link.click();
-                };
-            } 
-            else if (input.value) {
-                if(mode === 'dec') shift = -shift;
-                const out = input.value.split('').map(c => String.fromCharCode(c.charCodeAt(0) + (c === ' ' ? 0 : shift))).join('');
-                resText.innerText = out;
-                imgBox.classList.add('hidden');
-                actionBtn.innerText = "Copy Text";
-                actionBtn.onclick = () => {
-                    navigator.clipboard.writeText(out);
-                    alert("Copied!");
-                };
-            }
-
-            resArea.classList.remove('hidden');
-            if(settings.ghost) {
-                input.value = ''; shadowData = null;
-                document.getElementById('shadowStat').innerText = "LOAD";
-            }
-        }
-    </script>
-</body>
-</html>
+    // ... Keep the rest of your original run() and handleShadow() functions ...
+</script>
